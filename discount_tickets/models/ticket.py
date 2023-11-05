@@ -2,7 +2,7 @@ import uuid
 
 from django.db import models
 
-from discount_tickets.models.restaurant import Restaurant
+from restaurant.models.restaurant import Restaurant
 
 
 class Ticket(models.Model):
