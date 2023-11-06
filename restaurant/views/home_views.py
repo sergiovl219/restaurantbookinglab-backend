@@ -1,5 +1,3 @@
-import logging
-
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.response import Response
@@ -8,11 +6,8 @@ from rest_framework.decorators import authentication_classes, permission_classes
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
-from restaurant.models import Owner
-from restaurant.models import Restaurant
+from restaurant.helpers import owner_helper
 from restaurant.serializers.owner_serializers import OwnerDataSerializer
-from restaurant.serializers.owner_serializers import UserOwnerSerializer
-from restaurant.serializers.restaurant_serializers import RestaurantSerializer
 
 
 @authentication_classes([TokenAuthentication])
@@ -20,12 +15,16 @@ from restaurant.serializers.restaurant_serializers import RestaurantSerializer
 class HomePageView(APIView):
     @swagger_auto_schema(
         responses={
-            200: OwnerDataSerializer
+            200: OwnerDataSerializer,
+            400: "Owner not found"
         }
     )
     def get(self, request):
         user = request.user
-        owner = Owner.objects.get(user=user)
-        serializer = OwnerDataSerializer(owner)
+        owner = owner_helper.get_owner_by_user(user)
 
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        if owner is not None:
+            serializer = OwnerDataSerializer(owner)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response("Owner not found", status=status.HTTP_404_NOT_FOUND)
