@@ -1,3 +1,4 @@
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,6 +13,9 @@ from restaurant.models import Restaurant
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 class HomePageView(APIView):
+    @swagger_auto_schema(
+        responses={200: 'OK'},
+    )
     def get(self, request):
         user = request.user
         # TODO: Move to serializer or helpers

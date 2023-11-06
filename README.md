@@ -51,6 +51,9 @@ The backend should now be up and running. You can access the API endpoints at `h
 
 To use this backend component, you can integrate it with your front-end application. The API provides functionality for managing restaurants and booking tickets.
 
+## Swagger Documentation
+You can explore the API endpoints and their documentation interactively using Swagger. To access the Swagger UI, open your web browser and go to http://localhost:8000/swagger/.
+
 ## Configuration
 
 You can customize the project settings in the `settings.py` file.

@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework.authtoken',
+    'drf_yasg',
     'restaurant',
     'discount_tickets',
 ]
@@ -133,4 +134,19 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ]
+}
+
+# Swagger Settings
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Token': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+        },
+    },
+    'DEFAULT_INFO': 'Restaurant Booking LAB API',
+    'USE_SESSION_AUTH': False,
+    'JSON_EDITOR': True,
 }
