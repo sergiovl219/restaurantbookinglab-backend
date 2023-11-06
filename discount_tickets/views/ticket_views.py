@@ -7,7 +7,6 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from discount_tickets.helpers import ticket_helper
-from discount_tickets.models import Ticket
 from discount_tickets.serializers.ticket_serializers import TicketSerializer
 from restaurant.helpers import restaurant_helper
 
