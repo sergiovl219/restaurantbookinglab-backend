@@ -5,8 +5,6 @@ This is the backend component of the Restaurant Booking Lab project. It is built
 ## Prerequisites
 
 - Python 3.11
-- Django 4.2.7
-- Django Rest Framework 3.14.0
 
 ## Installation
 
