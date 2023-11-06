@@ -8,7 +8,9 @@ from rest_framework.permissions import IsAuthenticated
 
 from discount_tickets.models import Ticket
 from discount_tickets.serializers.ticket_serializers import TicketSerializer
+from restaurant.helpers import restaurant_helper
 from restaurant.models import Restaurant
+
 
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
@@ -19,13 +21,8 @@ class ListTicketsView(APIView):
         }
     )
     def get(self, request, restaurant_id):
-        # Obtén el restaurante
-        try:
-            restaurant = Restaurant.objects.get(id=restaurant_id, owner=request.user.owner)
-        except Restaurant.DoesNotExist:
-            return Response("Restaurant not found", status=status.HTTP_404_NOT_FOUND)
+        restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, request.user.owner)
 
-        # Obtén todos los tickets asociados al restaurante
         tickets = Ticket.objects.filter(restaurant=restaurant)
         serializer = TicketSerializer(tickets, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -42,13 +39,8 @@ class CreateTicketView(APIView):
         }
     )
     def post(self, request, restaurant_id):
-        # Obtén el restaurante
-        try:
-            restaurant = Restaurant.objects.get(id=restaurant_id, owner=request.user.owner)
-        except Restaurant.DoesNotExist:
-            return Response("Restaurant not found", status=status.HTTP_404_NOT_FOUND)
+        restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, request.user.owner)
 
-        # Valida y crea un nuevo ticket
         serializer = TicketSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save(restaurant=restaurant)
@@ -65,13 +57,8 @@ class RUDTicketView(APIView):
         }
     )
     def get(self, request, restaurant_id, ticket_id):
-        # Obtén el restaurante
-        try:
-            restaurant = Restaurant.objects.get(id=restaurant_id, owner=request.user.owner)
-        except Restaurant.DoesNotExist:
-            return Response("Restaurant not found", status=status.HTTP_404_NOT_FOUND)
+        restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, request.user.owner)
 
-        # Obtén el ticket
         try:
             ticket = Ticket.objects.get(id=ticket_id, restaurant=restaurant)
         except Ticket.DoesNotExist:
@@ -86,13 +73,8 @@ class RUDTicketView(APIView):
         }
     )
     def put(self, request, restaurant_id, ticket_id):
-        # Obtén el restaurante
-        try:
-            restaurant = Restaurant.objects.get(id=restaurant_id, owner=request.user.owner)
-        except Restaurant.DoesNotExist:
-            return Response("Restaurant not found", status=status.HTTP_404_NOT_FOUND)
+        restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, request.user.owner)
 
-        # Obtén el ticket
         try:
             ticket = Ticket.objects.get(id=ticket_id, restaurant=restaurant)
         except Ticket.DoesNotExist:
@@ -111,11 +93,7 @@ class RUDTicketView(APIView):
         }
     )
     def delete(self, request, restaurant_id, ticket_id):
-        # Obtén el restaurante
-        try:
-            restaurant = Restaurant.objects.get(id=restaurant_id, owner=request.user.owner)
-        except Restaurant.DoesNotExist:
-            return Response("Restaurant not found", status=status.HTTP_404_NOT_FOUND)
+        restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, request.user.owner)
 
         # Obtén el ticket y elimínalo
         try:
