@@ -18,8 +18,8 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/restaurant/', include('restaurant.urls', namespace='restaurant')),
-    path('api/discount_tickets/', include('discount_tickets.urls', namespace='discount_tickets')),
+    path('api/', include('restaurant.urls', namespace='restaurant')),
+    path('api/tickets/', include('discount_tickets.urls', namespace='discount_tickets')),
     path('api-token-auth', rest_framework_views.obtain_auth_token),
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
