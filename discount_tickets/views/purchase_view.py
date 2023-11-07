@@ -127,14 +127,13 @@ class TicketPurchaseCreateView(APIView):
                 "guest": None,  # TODO: Pending to define
                 "quantity": quantity
             }
+            tasks.process_ticket_purchase.delay(creation_data)
             serializer = PurchaseSerializer(data=creation_data)
             if serializer.is_valid():
-                try:
-                    tasks.process_ticket_purchase.delay(creation_data)
-                except TicketNotFoundException as e:
-                    raise TicketNotFoundAPIException(detail=e.message)
+                serializer.save(ticket=ticket, guest=None)
                 return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @authentication_classes([TokenAuthentication])

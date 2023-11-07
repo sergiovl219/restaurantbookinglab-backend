@@ -51,6 +51,7 @@ class TicketPurchaseCreateViewTestCase(TestCase):
         quantity = 1
         response = self.create_purchase(quantity)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        print(response.data)
 
         purchase = Purchase.objects.get()
         self.assertEqual(purchase.ticket, self.ticket)
