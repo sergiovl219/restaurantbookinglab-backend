@@ -35,3 +35,5 @@ Thumbs.db
 .vscode/
 
 dump.rdb
+
+restaurant_booking_venv/

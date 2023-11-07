@@ -5,6 +5,7 @@ This is the backend component of the Restaurant Booking Lab project. It is built
 ## Prerequisites
 
 - Python 3.11
+- Redis 7.2.3
 
 ## Installation
 
@@ -19,10 +20,12 @@ This is the backend component of the Restaurant Booking Lab project. It is built
     ```
 
 3. Create a virtual environment and activate it:
-    ```bash
-    python -m venv restaurant_booking_venv
-    source restaurant_booking_venv/bin/activate # On Windows, use: venv\Scripts\activate
-    ```
+   ```bash
+   python -m venv restaurant_booking_venv
+   ```
+   ```bash
+   source restaurant_booking_venv/bin/activate
+   ```
 
 4. Install Poetry using pip:
     ```bash
