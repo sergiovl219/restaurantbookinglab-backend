@@ -23,6 +23,22 @@ class UserInfoView(APIView):
         }
     )
     def get(self, request):
+        """
+        Get owner information.
+
+        Retrieves owner information associated with the authenticated user account.
+
+        Args:
+            request (HttpRequest): The HTTP request.
+
+        Returns:
+            Response: A response containing owner information.
+
+        Raises:
+            OwnerNotFoundAPIException: If the owner is not found.
+            BadRequestAPIException: If an unexpected error occurs.
+
+        """
         user = request.user
         try:
             owner = owner_helper.get_owner_by_user(user)

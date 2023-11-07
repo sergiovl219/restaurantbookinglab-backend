@@ -26,6 +26,21 @@ class ListTicketsView(APIView):
         }
     )
     def get(self, request, restaurant_id):
+        """
+        Get a list of tickets for a restaurant.
+
+        Args:
+            request: The request object.
+            restaurant_id (UUID): The ID of the restaurant.
+
+        Returns:
+            Response: A Response object with the list of tickets or an error message.
+
+        Raises:
+            RestaurantNotFoundAPIException: If the restaurant is not found.
+            BadRequestAPIException: If an unexpected error occurs.
+
+        """
         try:
             restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, request.user.owner)
             tickets = ticket_helper.get_tickets_for_restaurant(restaurant)
@@ -50,6 +65,21 @@ class CreateTicketView(APIView):
         }
     )
     def post(self, request, restaurant_id):
+        """
+        Create a new ticket for a restaurant.
+
+        Args:
+            request: The request object.
+            restaurant_id (UUID): The ID of the restaurant.
+
+        Returns:
+            Response: A Response object with the created ticket or an error message.
+
+        Raises:
+            RestaurantNotFoundAPIException: If the restaurant is not found.
+            BadRequestAPIException: If an unexpected error occurs.
+
+        """
         try:
             restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, request.user.owner)
         except RestaurantNotFoundException as e:
@@ -74,6 +104,23 @@ class RUDTicketView(APIView):
         }
     )
     def get(self, request, restaurant_id, ticket_id):
+        """
+        Get the details of a ticket for a restaurant.
+
+        Args:
+            request: The request object.
+            restaurant_id (UUID): The ID of the restaurant.
+            ticket_id (UUID): The ID of the ticket.
+
+        Returns:
+            Response: A Response object with the details of the ticket or an error message.
+
+        Raises:
+            RestaurantNotFoundAPIException: If the restaurant is not found.
+            TicketNotFoundAPIException: If the ticket is not found.
+            BadRequestAPIException: If an unexpected error occurs.
+
+        """
         try:
             restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, request.user.owner)
             ticket = ticket_helper.get_ticket_for_restaurant(ticket_id, restaurant)
@@ -94,6 +141,23 @@ class RUDTicketView(APIView):
         }
     )
     def put(self, request, restaurant_id, ticket_id):
+        """
+        Update the details of a ticket for a restaurant.
+
+        Args:
+            request: The request object.
+            restaurant_id (UUID): The ID of the restaurant.
+            ticket_id (UUID): The ID of the ticket.
+
+        Returns:
+            Response: A Response object with the updated ticket details or an error message.
+
+        Raises:
+            RestaurantNotFoundAPIException: If the restaurant is not found.
+            TicketNotFoundAPIException: If the ticket is not found.
+            BadRequestAPIException: If an unexpected error occurs.
+
+        """
         try:
             restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, request.user.owner)
             ticket = ticket_helper.get_ticket_for_restaurant(ticket_id, restaurant)
@@ -117,6 +181,23 @@ class RUDTicketView(APIView):
         }
     )
     def delete(self, request, restaurant_id, ticket_id):
+        """
+        Delete a ticket for a restaurant.
+
+        Args:
+            request: The request object.
+            restaurant_id (UUID): The ID of the restaurant.
+            ticket_id (UUID): The ID of the ticket.
+
+        Returns:
+            Response: A Response object with a success status or an error message.
+
+        Raises:
+            RestaurantNotFoundAPIException: If the restaurant is not found.
+            TicketNotFoundAPIException: If the ticket is not found.
+            BadRequestAPIException: If an unexpected error occurs.
+
+        """
         try:
             restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, request.user.owner)
             ticket = ticket_helper.get_ticket_for_restaurant(ticket_id, restaurant)

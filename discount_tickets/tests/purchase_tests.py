@@ -44,6 +44,10 @@ class TicketPurchaseCreateViewTestCase(TestCase):
         return response
 
     def test_successful_purchase(self):
+        """
+        Test a successful purchase.
+        Verifies that a purchase is successfully created.
+        """
         quantity = 1
         response = self.create_purchase(quantity)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -54,6 +58,10 @@ class TicketPurchaseCreateViewTestCase(TestCase):
         self.assertEqual(purchase.quantity, quantity)
 
     def test_concurrent_purchases(self):
+        """
+        Test concurrent purchases using threads.
+        Verifies that concurrent purchases are handled correctly.
+        """
         num_threads = 2
         threads = []
 

@@ -36,6 +36,24 @@ class TicketPurchaseGetView(APIView):
         }
     )
     def get(self, request, restaurant_id, purchase_id):
+        """
+        Retrieve the details of a purchase ticket for a restaurant.
+
+        Args:
+            request: The request object.
+            restaurant_id (UUID): The ID of the restaurant.
+            purchase_id (UUID): The ID of the purchase.
+
+        Returns:
+            Response: A Response object with the details of the purchase or an error message.
+
+        Raises:
+            OwnerNotFoundAPIException: If the owner is not found.
+            RestaurantNotFoundAPIException: If the restaurant is not found.
+            PurchaseNotFoundAPIException: If the purchase is not found.
+            BadRequestAPIException: If an unexpected error occurs.
+
+        """
         try:
             owner = owner_helper.get_owner_by_user(request.user)
             restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, owner)
@@ -66,6 +84,23 @@ class TicketPurchaseCreateView(APIView):
         }
     )
     def post(self, request, restaurant_id, ticket_id):
+        """
+        Create a new purchase for a ticket at a restaurant. Celery task added.
+
+        Args:
+            request: The request object.
+            restaurant_id (UUID): The ID of the restaurant.
+            ticket_id (UUID): The ID of the ticket.
+
+        Returns:
+            Response: A Response object with the details of the created purchase or an error message.
+
+        Raises:
+            RestaurantNotFoundAPIException: If the restaurant is not found.
+            TicketNotFoundAPIException: If the ticket is not found.
+            BadRequestAPIException: If an unexpected error occurs.
+
+        """
         try:
             restaurant = restaurant_helper.get_restaurant_by_id(restaurant_id)
             ticket = ticket_helper.get_ticket_for_restaurant(ticket_id, restaurant)
@@ -113,6 +148,23 @@ class TicketPurchaseListView(APIView):
         }
     )
     def get(self, request, restaurant_id):
+        """
+        Retrieve a list of ticket purchases for a specific restaurant.
+
+        Args:
+            request: The request object.
+            restaurant_id (UUID): The ID of the restaurant.
+
+        Returns:
+            Response: A Response object containing a list of purchases for the restaurant or an error message.
+
+        Raises:
+            OwnerNotFoundAPIException: If the owner is not found.
+            RestaurantNotFoundAPIException: If the restaurant is not found.
+            PurchaseNotFoundAPIException: If no purchases are found.
+            BadRequestAPIException: If an unexpected error occurs.
+
+        """
         try:
             owner = owner_helper.get_owner_by_user(request.user)
             restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, owner)
