@@ -47,6 +47,10 @@ The backend should now be up and running. You can access the API endpoints at `h
 
 > Note: The project is currently configured to use SQLite as the database for testing and development purposes only. SQLite is not recommended for production environments, and it is advisable to configure a more robust database system for production use. Ensure that you do not upload sensitive information to a SQLite database on a public repository like GitHub.
 
+> Note: Multiple settings will be good to multiple environments (dev, test, prod).
+
+> Note: Docker compose will be useful in order to mount Redis, Celery and Flower servers.
+
 ## Usage
 
 To use this backend component, you can integrate it with your front-end application. The API provides functionality for managing restaurants and booking tickets.
