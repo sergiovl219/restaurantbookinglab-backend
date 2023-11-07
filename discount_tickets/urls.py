@@ -12,4 +12,5 @@ urlpatterns = [
          name='get-purchase'),
     path('restaurant/<uuid:restaurant_id>/purchase/ticket/<uuid:ticket_id>', views.TicketPurchaseCreateView.as_view(),
          name='ticket-purchase'),
+    path('purchase/status/<str:task_id>', views.TicketPurchaseCreateView.as_view(),  name='ticket-purchase-status'),
 ]

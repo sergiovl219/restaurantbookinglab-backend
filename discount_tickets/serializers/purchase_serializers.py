@@ -17,6 +17,20 @@ class PurchaseSerializer(serializers.ModelSerializer):
         ]
 
 
+class PurchaseResponseSerializer(serializers.Serializer):
+    id = serializers.UUIDField(read_only=True)
+    ticket = serializers.UUIDField()
+    guest = serializers.UUIDField(allow_null=True)
+    quantity = serializers.IntegerField()
+    purchase_date = serializers.DateTimeField()
+
+
+class PurchaseTicketResultSerializer(serializers.Serializer):
+    status = serializers.CharField()
+    result = PurchaseResponseSerializer(required=False)
+    error_message = serializers.CharField(required=False)
+
+
 class PurchaseTicketSerializer(serializers.Serializer):
     quantity = serializers.IntegerField()
 

@@ -1,3 +1,4 @@
+from celery.result import AsyncResult
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -15,8 +16,10 @@ from discount_tickets.exceptions.custom_exceptions import PurchaseNotFoundExcept
 from discount_tickets.exceptions.custom_exceptions import TicketNotFoundException
 from discount_tickets.helpers import purchase_helper
 from discount_tickets.helpers import ticket_helper
+from discount_tickets.serializers.purchase_serializers import PurchaseResponseSerializer
 from discount_tickets.serializers.purchase_serializers import PurchaseSerializer
 from discount_tickets.serializers.purchase_serializers import PurchaseTicketQueuedSerializer
+from discount_tickets.serializers.purchase_serializers import PurchaseTicketResultSerializer
 from discount_tickets.serializers.purchase_serializers import PurchaseTicketSerializer
 from restaurant.exceptions.api_exceptions import OwnerNotFoundAPIException
 from restaurant.exceptions.api_exceptions import RestaurantNotFoundAPIException
@@ -25,6 +28,7 @@ from restaurant.exceptions.custom_exceptions import RestaurantNotFoundException
 from restaurant.helpers import owner_helper
 from restaurant.helpers import restaurant_helper
 from restaurantbookinglab.exceptions import BadRequestAPIException
+from restaurantbookinglab.exceptions import TaskNotFoundAPIException
 
 
 @authentication_classes([TokenAuthentication])
@@ -79,7 +83,7 @@ class TicketPurchaseCreateView(APIView):
     @swagger_auto_schema(
         request_body=PurchaseTicketSerializer,
         responses={
-            201: PurchaseTicketQueuedSerializer,
+            202: PurchaseTicketQueuedSerializer,
             400: "Ticket not available",
             409: "Not enough tickets available"
         }
@@ -139,6 +143,58 @@ class TicketPurchaseCreateView(APIView):
                 serializer_response.validated_data,
                 status=status.HTTP_202_ACCEPTED
             )
+
+    @swagger_auto_schema(
+        request_body=PurchaseTicketQueuedSerializer,
+        responses={
+            202: PurchaseTicketResultSerializer,
+            200: "Pending Task",
+            400: "Bad Request",
+            409: "Task Failed",
+        }
+    )
+    def get(self, request, task_id):
+        """
+        Retrieve the result of a Celery task queued for a Ticket Purchase.
+
+        Args:
+            request: The request object.
+            task_id (str): The ID of the Celery task.
+
+        Returns:
+            Response: A Response object containing the task status and result.
+
+        Raises:
+            BadRequestAPIException: If an error occurs while looking for the task.
+        """
+        try:
+            result = AsyncResult(task_id)
+
+            if result.state == 'SUCCESS':
+                purchase_serializer = PurchaseResponseSerializer(data=result.result)
+                if purchase_serializer.is_valid():
+                    result = purchase_serializer.validated_data
+                    result_data = {
+                        'status': 'completed',
+                        'result': result
+                    }
+                    result_serializer = PurchaseTicketResultSerializer(data=result_data)
+                    result_serializer.is_valid(raise_exception=True)
+                    return Response(result_serializer.validated_data, status=status.HTTP_202_ACCEPTED)
+            elif result.state == 'FAILURE':
+                result_serializer = PurchaseTicketResultSerializer(data={'status': 'failed',
+                                                                         'error_message': result.result})
+                result_serializer.is_valid(raise_exception=True)
+                return Response(result_serializer.validated_data, status=status.HTTP_409_CONFLICT)
+            elif result.state == 'PENDING':
+                result_serializer = PurchaseTicketResultSerializer(data={'status': 'pending'})
+                result_serializer.is_valid(raise_exception=True)
+                return Response(result_serializer.validated_data, status=status.HTTP_200_OK)
+            else:
+                return Response({'status': result.state})
+        except Exception as e:
+            print(e)
+            raise BadRequestAPIException(f"Error: '{e.__str__()}' looking for task with id {task_id}")
 
 
 @authentication_classes([TokenAuthentication])
