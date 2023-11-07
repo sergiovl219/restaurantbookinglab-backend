@@ -1,4 +1,5 @@
 __pycache__/
+restaurantbookinglab/__pycache__/
 *.pyc
 *.pyo
 *.pyd
@@ -32,3 +33,5 @@ Thumbs.db
 
 .idea/
 .vscode/
+
+dump.rdb
