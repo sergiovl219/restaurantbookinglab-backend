@@ -1,1 +1,1 @@
-from .home_views import HomePageView
+from .userinfo_views import UserInfoView

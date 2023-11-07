@@ -9,12 +9,21 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 
 from discount_tickets import tasks
+from discount_tickets.exceptions.api_exceptions import PurchaseNotFoundAPIException
+from discount_tickets.exceptions.api_exceptions import TicketNotFoundAPIException
+from discount_tickets.exceptions.custom_exceptions import PurchaseNotFoundException
+from discount_tickets.exceptions.custom_exceptions import TicketNotFoundException
 from discount_tickets.helpers import purchase_helper
 from discount_tickets.helpers import ticket_helper
 from discount_tickets.serializers.purchase_serializers import PurchaseSerializer
 from discount_tickets.serializers.purchase_serializers import PurchaseTicketSerializer
+from restaurant.exceptions.api_exceptions import OwnerNotFoundAPIException
+from restaurant.exceptions.api_exceptions import RestaurantNotFoundAPIException
+from restaurant.exceptions.custom_exceptions import OwnerNotFoundException
+from restaurant.exceptions.custom_exceptions import RestaurantNotFoundException
 from restaurant.helpers import owner_helper
 from restaurant.helpers import restaurant_helper
+from restaurantbookinglab.exceptions import BadRequestAPIException
 
 
 @authentication_classes([TokenAuthentication])
@@ -27,9 +36,19 @@ class TicketPurchaseGetView(APIView):
         }
     )
     def get(self, request, restaurant_id, purchase_id):
-        owner = owner_helper.get_owner_by_user(request.user)
-        restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, owner)
-        purchase = purchase_helper.get_purchase_by_id(purchase_id)
+        try:
+            owner = owner_helper.get_owner_by_user(request.user)
+            restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, owner)
+            purchase = purchase_helper.get_purchase_by_id(purchase_id)
+        except OwnerNotFoundException as e:
+            raise OwnerNotFoundAPIException(e.message)
+        except RestaurantNotFoundException as e:
+            raise RestaurantNotFoundAPIException(e.message)
+        except PurchaseNotFoundException as e:
+            raise PurchaseNotFoundAPIException(e.message)
+        except Exception:
+            raise BadRequestAPIException
+
         serializer = PurchaseSerializer(purchase, many=False)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -47,30 +66,40 @@ class TicketPurchaseCreateView(APIView):
         }
     )
     def post(self, request, restaurant_id, ticket_id):
-        restaurant = restaurant_helper.get_restaurant_by_id(restaurant_id)
-        ticket = ticket_helper.get_ticket_for_restaurant(ticket_id, restaurant)
+        try:
+            restaurant = restaurant_helper.get_restaurant_by_id(restaurant_id)
+            ticket = ticket_helper.get_ticket_for_restaurant(ticket_id, restaurant)
+        except RestaurantNotFoundException as e:
+            raise RestaurantNotFoundAPIException(e.message)
+        except TicketNotFoundException as e:
+            raise TicketNotFoundAPIException(e.message)
+        except Exception:
+            raise BadRequestAPIException
 
-        if ticket.count <= 0:
-            return Response("Ticket not available", status=status.HTTP_400_BAD_REQUEST)
+        with transaction.atomic():
+            if ticket.count <= 0:
+                return Response("Ticket not available", status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = PurchaseTicketSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+            serializer = PurchaseTicketSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
 
-        quantity = serializer.validated_data['quantity']
-        if quantity > ticket.count:
-            return Response("Not enough tickets available", status=status.HTTP_400_BAD_REQUEST)
+            quantity = serializer.validated_data['quantity']
+            if quantity > ticket.count:
+                return Response("Not enough tickets available", status=status.HTTP_400_BAD_REQUEST)
 
-        creation_data = {
-            "ticket": ticket.id,
-            "guest": None,  # TODO: Pending to define
-            "quantity": quantity
-        }
-        serializer = PurchaseSerializer(data=creation_data)
-        if serializer.is_valid():
-            # TODO: Catch Exception and Raise API Exception
-            tasks.process_ticket_purchase.delay(creation_data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            creation_data = {
+                "ticket": ticket.id,
+                "guest": None,  # TODO: Pending to define
+                "quantity": quantity
+            }
+            serializer = PurchaseSerializer(data=creation_data)
+            if serializer.is_valid():
+                try:
+                    tasks.process_ticket_purchase.delay(creation_data)
+                except TicketNotFoundException as e:
+                    raise TicketNotFoundAPIException(detail=e.message)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @authentication_classes([TokenAuthentication])
@@ -84,9 +113,18 @@ class TicketPurchaseListView(APIView):
         }
     )
     def get(self, request, restaurant_id):
-        owner = owner_helper.get_owner_by_user(request.user)
-        restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, owner)
-        purchases = purchase_helper.get_purchases_by_restaurant(restaurant)
+        try:
+            owner = owner_helper.get_owner_by_user(request.user)
+            restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, owner)
+            purchases = purchase_helper.get_purchases_by_restaurant(restaurant)
+        except OwnerNotFoundException as e:
+            raise OwnerNotFoundAPIException(e.message)
+        except RestaurantNotFoundException as e:
+            raise RestaurantNotFoundAPIException(e.message)
+        except PurchaseNotFoundException as e:
+            raise PurchaseNotFoundAPIException(e.message)
+        except Exception:
+            raise BadRequestAPIException
         serializer = PurchaseSerializer(purchases, many=True)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
