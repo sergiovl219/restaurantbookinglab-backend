@@ -26,6 +26,9 @@ def handle_purchase_pre_save(sender, instance, **kwargs):
     quantity = instance.quantity
     max_purchase = ticket.max_purchase
 
+    if ticket.count <= 0:
+        # TODO: Custom exception
+        raise Exception
     if quantity > max_purchase:
         # TODO: Custom exception
         raise Exception

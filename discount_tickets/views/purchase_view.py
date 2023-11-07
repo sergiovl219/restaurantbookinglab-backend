@@ -1,5 +1,3 @@
-import logging
-
 from django.db import transaction
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -10,9 +8,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
+from discount_tickets import tasks
 from discount_tickets.helpers import purchase_helper
 from discount_tickets.helpers import ticket_helper
-from discount_tickets.models import Ticket
 from discount_tickets.serializers.purchase_serializers import PurchaseSerializer
 from discount_tickets.serializers.purchase_serializers import PurchaseTicketSerializer
 from restaurant.helpers import owner_helper
@@ -38,6 +36,8 @@ class TicketPurchaseGetView(APIView):
 
 
 class TicketPurchaseCreateView(APIView):
+    authentication_classes = []
+
     @swagger_auto_schema(
         request_body=PurchaseTicketSerializer,
         responses={
@@ -60,18 +60,17 @@ class TicketPurchaseCreateView(APIView):
         if quantity > ticket.count:
             return Response("Not enough tickets available", status=status.HTTP_400_BAD_REQUEST)
 
-        with transaction.atomic():
-            creation_data = {
-                "ticket": ticket.id,
-                "guest": None,  # TODO: Pending to define
-                "quantity": quantity
-            }
-            serializer = PurchaseSerializer(data=creation_data)
-            if serializer.is_valid():
-                # TODO: Catch Exception and Raise API Exception
-                serializer.save(ticket=ticket, guest=None)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        creation_data = {
+            "ticket": ticket.id,
+            "guest": None,  # TODO: Pending to define
+            "quantity": quantity
+        }
+        serializer = PurchaseSerializer(data=creation_data)
+        if serializer.is_valid():
+            # TODO: Catch Exception and Raise API Exception
+            tasks.process_ticket_purchase.delay(creation_data)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 @authentication_classes([TokenAuthentication])

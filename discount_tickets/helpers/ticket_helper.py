@@ -16,6 +16,15 @@ def get_ticket_for_restaurant(ticket_id, restaurant: Restaurant) -> Ticket:
         raise e
 
 
+def get_ticket_by_id(ticket_id) -> Ticket:
+    try:
+        ticket = Ticket.objects.get(id=ticket_id)
+        return ticket
+    except Ticket.DoesNotExist as e:
+        # TODO: Custom exceptions
+        raise e
+
+
 def update_ticket_count(ticket: Ticket, amount: int):
     ticket.count -= amount
     ticket.save()

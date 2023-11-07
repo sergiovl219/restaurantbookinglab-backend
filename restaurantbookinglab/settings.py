@@ -84,6 +84,17 @@ DATABASES = {
     }
 }
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'restaurantbookinglabdb',
+#         'USER': 'admin',
+#         'PASSWORD': '1234',
+#         'HOST': 'localhost',
+#         'PORT': '3306',
+#     }
+# }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
@@ -150,3 +161,7 @@ SWAGGER_SETTINGS = {
     'USE_SESSION_AUTH': False,
     'JSON_EDITOR': True,
 }
+
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
