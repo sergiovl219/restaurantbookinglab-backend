@@ -19,3 +19,7 @@ class PurchaseSerializer(serializers.ModelSerializer):
 
 class PurchaseTicketSerializer(serializers.Serializer):
     quantity = serializers.IntegerField()
+
+
+class PurchaseTicketQueuedSerializer(serializers.Serializer):
+    task_id = serializers.UUIDField()

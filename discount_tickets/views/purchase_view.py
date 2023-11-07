@@ -16,6 +16,7 @@ from discount_tickets.exceptions.custom_exceptions import TicketNotFoundExceptio
 from discount_tickets.helpers import purchase_helper
 from discount_tickets.helpers import ticket_helper
 from discount_tickets.serializers.purchase_serializers import PurchaseSerializer
+from discount_tickets.serializers.purchase_serializers import PurchaseTicketQueuedSerializer
 from discount_tickets.serializers.purchase_serializers import PurchaseTicketSerializer
 from restaurant.exceptions.api_exceptions import OwnerNotFoundAPIException
 from restaurant.exceptions.api_exceptions import RestaurantNotFoundAPIException
@@ -78,7 +79,7 @@ class TicketPurchaseCreateView(APIView):
     @swagger_auto_schema(
         request_body=PurchaseTicketSerializer,
         responses={
-            201: PurchaseSerializer,
+            201: PurchaseTicketQueuedSerializer,
             400: "Ticket not available",
             409: "Not enough tickets available"
         }
@@ -101,6 +102,9 @@ class TicketPurchaseCreateView(APIView):
             BadRequestAPIException: If an unexpected error occurs.
 
         """
+        serializer = PurchaseTicketSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         try:
             restaurant = restaurant_helper.get_restaurant_by_id(restaurant_id)
             ticket = ticket_helper.get_ticket_for_restaurant(ticket_id, restaurant)
@@ -108,8 +112,8 @@ class TicketPurchaseCreateView(APIView):
             raise RestaurantNotFoundAPIException(e.message)
         except TicketNotFoundException as e:
             raise TicketNotFoundAPIException(e.message)
-        except Exception:
-            raise BadRequestAPIException
+        except Exception as e:
+            raise BadRequestAPIException(e.__str__())
 
         with transaction.atomic():
             if ticket.count <= 0:
@@ -127,13 +131,14 @@ class TicketPurchaseCreateView(APIView):
                 "guest": None,  # TODO: Pending to define
                 "quantity": quantity
             }
-            tasks.process_ticket_purchase.delay(creation_data)
-            serializer = PurchaseSerializer(data=creation_data)
-            if serializer.is_valid():
-                serializer.save(ticket=ticket, guest=None)
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+            task = tasks.process_ticket_purchase.apply_async(args=(creation_data,))
+            serializer_response = PurchaseTicketQueuedSerializer(data={"task_id": task.id})
+            serializer_response.is_valid(raise_exception=True)
+            return Response(
+                serializer_response.validated_data,
+                status=status.HTTP_202_ACCEPTED
+            )
 
 
 @authentication_classes([TokenAuthentication])
