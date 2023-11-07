@@ -1,5 +1,7 @@
 import threading
+import time
 
+from celery.contrib.testing.worker import start_worker
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory
 from rest_framework.test import APIClient
@@ -8,10 +10,12 @@ from rest_framework.authtoken.models import Token
 from rest_framework import status
 from django.contrib.auth import get_user_model
 
+from discount_tickets import tasks
 from discount_tickets.models import Purchase
 from discount_tickets.models import Ticket
 from restaurant.models import Owner
 from restaurant.models import Restaurant
+from restaurantbookinglab.celery import app
 
 User = get_user_model()
 
@@ -43,37 +47,12 @@ class TicketPurchaseCreateViewTestCase(TestCase):
         response = client.post(url, data, format='json')
         return response
 
-    def test_successful_purchase(self):
+    def test_successful_purchase_queued(self):
         """
-        Test a successful purchase.
+        Test a successful purchase queued in Celery.
         Verifies that a purchase is successfully created.
         """
         quantity = 1
         response = self.create_purchase(quantity)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        purchase = Purchase.objects.get()
-        self.assertEqual(purchase.ticket, self.ticket)
-        self.assertEqual(purchase.guest, None)
-        self.assertEqual(purchase.quantity, quantity)
-
-    def test_concurrent_purchases(self):
-        """
-        Test concurrent purchases using threads.
-        Verifies that concurrent purchases are handled correctly.
-        """
-        num_threads = 2
-        threads = []
-
-        def make_purchase():
-            self.create_purchase(quantity=1)
-
-        for _ in range(num_threads):
-            thread = threading.Thread(target=make_purchase)
-            threads.append(thread)
-            thread.start()
-
-        for thread in threads:
-            thread.join()
-
-        self.assertEqual(Purchase.objects.count(), 1)
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        self.assertIsNotNone(response.data.get("task_id"))

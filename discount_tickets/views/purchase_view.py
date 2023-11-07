@@ -119,35 +119,31 @@ class TicketPurchaseCreateView(APIView):
         except Exception as e:
             raise BadRequestAPIException(e.__str__())
 
-        with transaction.atomic():
-            if ticket.count <= 0:
-                return Response("Ticket not available", status=status.HTTP_400_BAD_REQUEST)
+        if ticket.count <= 0:
+            return Response("Ticket not available", status=status.HTTP_400_BAD_REQUEST)
 
-            serializer = PurchaseTicketSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
+        serializer = PurchaseTicketSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-            quantity = serializer.validated_data['quantity']
-            if quantity > ticket.count:
-                return Response("Not enough tickets available", status=status.HTTP_400_BAD_REQUEST)
+        quantity = serializer.validated_data['quantity']
+        if quantity > ticket.count:
+            return Response("Not enough tickets available", status=status.HTTP_400_BAD_REQUEST)
 
-            creation_data = {
-                "ticket": ticket.id,
-                "guest": None,  # TODO: Pending to define
-                "quantity": quantity
-            }
+        creation_data = {
+            "ticket": ticket.id,
+            "guest": None,  # TODO: Pending to define
+            "quantity": quantity
+        }
 
-            task = tasks.process_ticket_purchase.apply_async(args=(creation_data,))
-            serializer_response = PurchaseTicketQueuedSerializer(data={"task_id": task.id})
-            serializer_response.is_valid(raise_exception=True)
-            return Response(
-                serializer_response.validated_data,
-                status=status.HTTP_202_ACCEPTED
-            )
+        task = tasks.process_ticket_purchase.apply_async(args=(creation_data,), countdown=2)
+        serializer_response = PurchaseTicketQueuedSerializer(data={"task_id": task.id})
+        serializer_response.is_valid(raise_exception=True)
+        return Response(serializer_response.validated_data, status=status.HTTP_202_ACCEPTED)
 
     @swagger_auto_schema(
         request_body=PurchaseTicketQueuedSerializer,
         responses={
-            202: PurchaseTicketResultSerializer,
+            201: PurchaseTicketResultSerializer,
             200: "Pending Task",
             400: "Bad Request",
             409: "Task Failed",
@@ -169,21 +165,21 @@ class TicketPurchaseCreateView(APIView):
         """
         try:
             result = AsyncResult(task_id)
-
+            # TODO: Refactor to do not repeat code.
             if result.state == 'SUCCESS':
                 purchase_serializer = PurchaseResponseSerializer(data=result.result)
-                if purchase_serializer.is_valid():
-                    result = purchase_serializer.validated_data
-                    result_data = {
-                        'status': 'completed',
-                        'result': result
-                    }
-                    result_serializer = PurchaseTicketResultSerializer(data=result_data)
-                    result_serializer.is_valid(raise_exception=True)
-                    return Response(result_serializer.validated_data, status=status.HTTP_202_ACCEPTED)
+                purchase_serializer.is_valid(raise_exception=True)
+                result = purchase_serializer.validated_data
+                result_data = {
+                    'status': 'completed',
+                    'result': result
+                }
+                result_serializer = PurchaseTicketResultSerializer(data=result_data)
+                result_serializer.is_valid(raise_exception=True)
+                return Response(result_serializer.validated_data, status=status.HTTP_201_CREATED)
             elif result.state == 'FAILURE':
                 result_serializer = PurchaseTicketResultSerializer(data={'status': 'failed',
-                                                                         'error_message': result.result})
+                                                                         'error_message': str(result.result)})
                 result_serializer.is_valid(raise_exception=True)
                 return Response(result_serializer.validated_data, status=status.HTTP_409_CONFLICT)
             elif result.state == 'PENDING':
@@ -193,8 +189,7 @@ class TicketPurchaseCreateView(APIView):
             else:
                 return Response({'status': result.state})
         except Exception as e:
-            print(e)
-            raise BadRequestAPIException(f"Error: '{e.__str__()}' looking for task with id {task_id}")
+            raise BadRequestAPIException(f"Error: '{str(e)}' looking for task with id {task_id}")
 
 
 @authentication_classes([TokenAuthentication])

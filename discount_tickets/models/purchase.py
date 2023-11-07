@@ -6,6 +6,8 @@ from django.db.models.signals import post_save
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
 
+from discount_tickets.exceptions.custom_exceptions import QuantityExceedsMaxPurchaseException
+from discount_tickets.exceptions.custom_exceptions import TicketNotAvailableException
 from discount_tickets.helpers import ticket_helper
 from discount_tickets.models.ticket import Ticket
 
@@ -27,11 +29,9 @@ def handle_purchase_pre_save(sender, instance, **kwargs):
     max_purchase = ticket.max_purchase
 
     if ticket.count <= 0:
-        # TODO: Custom exception
-        raise Exception
+        raise TicketNotAvailableException(f"Not enough tickets available.")
     if quantity > max_purchase:
-        # TODO: Custom exception
-        raise Exception
+        raise QuantityExceedsMaxPurchaseException(f"Required tickets {quantity} exceeds max purchase {max_purchase}")
 
 
 @receiver(post_save, sender=Purchase)

@@ -18,7 +18,7 @@ class PurchaseSerializer(serializers.ModelSerializer):
 
 
 class PurchaseResponseSerializer(serializers.Serializer):
-    id = serializers.UUIDField(read_only=True)
+    id = serializers.UUIDField()
     ticket = serializers.UUIDField()
     guest = serializers.UUIDField(allow_null=True)
     quantity = serializers.IntegerField()
