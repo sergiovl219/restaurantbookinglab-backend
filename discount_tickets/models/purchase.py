@@ -31,7 +31,9 @@ def handle_purchase_pre_save(sender, instance, **kwargs):
     if ticket.count <= 0:
         raise TicketNotAvailableException(f"Not enough tickets available.")
     if quantity > max_purchase:
-        raise QuantityExceedsMaxPurchaseException(f"Required tickets {quantity} exceeds max purchase {max_purchase}")
+        raise QuantityExceedsMaxPurchaseException(
+            f"Required tickets {quantity} exceeds max purchase allowed {max_purchase}"
+        )
 
 
 @receiver(post_save, sender=Purchase)
