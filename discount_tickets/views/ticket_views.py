@@ -16,8 +16,6 @@ from restaurant.helpers import restaurant_helper
 from restaurantbookinglab.exceptions import BadRequestAPIException
 
 
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
 class ListTicketsView(APIView):
     @swagger_auto_schema(
         responses={
@@ -42,7 +40,7 @@ class ListTicketsView(APIView):
 
         """
         try:
-            restaurant = restaurant_helper.get_restaurant_by_id_and_owner(restaurant_id, request.user.owner)
+            restaurant = restaurant_helper.get_restaurant_by_id(restaurant_id)
             tickets = ticket_helper.get_tickets_for_restaurant(restaurant)
         except RestaurantNotFoundException as e:
             raise RestaurantNotFoundAPIException(e.message)

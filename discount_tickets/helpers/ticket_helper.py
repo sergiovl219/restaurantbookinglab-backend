@@ -1,5 +1,7 @@
 from uuid import UUID
 
+from django.db.models import Q
+
 from discount_tickets.exceptions.custom_exceptions import TicketNotFoundException
 from discount_tickets.models.ticket import Ticket
 from restaurant.models import Restaurant
@@ -19,7 +21,7 @@ def get_tickets_for_restaurant(restaurant: Restaurant):
         None
 
     """
-    tickets = Ticket.objects.filter(restaurant=restaurant)
+    tickets = Ticket.objects.filter(Q(restaurant=restaurant) & Q(count__gt=0))
     return tickets
 
 
