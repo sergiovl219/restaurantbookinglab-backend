@@ -41,8 +41,11 @@ This is the backend component of the Restaurant Booking Lab project. It is built
     ```bash
     python manage.py migrate
     ```
+7. Install Redis:
 
-7. Start the development server:
+   For detailed instructions on installing Redis, please refer to the official Redis documentation: [Redis Installation Guide](https://redis.io/docs/install/install-redis/)
+
+8. Start the development server:
     ```bash
     python manage.py runserver
     ```
