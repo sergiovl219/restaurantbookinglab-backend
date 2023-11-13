@@ -135,7 +135,7 @@ class TicketPurchaseCreateView(APIView):
             "quantity": quantity
         }
 
-        task = tasks.process_ticket_purchase.apply_async(args=(creation_data,), countdown=2)
+        task = tasks.process_ticket_purchase.apply_async(args=(creation_data,))
         serializer_response = PurchaseTicketQueuedSerializer(data={"task_id": task.id})
         serializer_response.is_valid(raise_exception=True)
         return Response(serializer_response.validated_data, status=status.HTTP_202_ACCEPTED)
