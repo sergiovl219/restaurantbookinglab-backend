@@ -37,6 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework.authtoken',
+    'drf_yasg',
+    'corsheaders',
+    'restaurant',
+    'discount_tickets',
 ]
 
 MIDDLEWARE = [
@@ -47,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'restaurantbookinglab.urls'
@@ -77,7 +83,15 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    },
+    'mysql': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'restaurantbookinglabdb',
+        'USER': 'admin',
+        'PASSWORD': '1234',
+        'HOST': 'localhost',
+        'PORT': '3306',
+    },
 }
 
 
@@ -121,3 +135,38 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Django Rest Framework
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ]
+}
+
+# Swagger Settings
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Token': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+        },
+    },
+    'DEFAULT_INFO': 'Restaurant Booking LAB API',
+    'USE_SESSION_AUTH': False,
+    'JSON_EDITOR': True,
+}
+
+# Celery Configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+
+
+# CORS
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+]

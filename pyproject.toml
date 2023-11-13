@@ -8,6 +8,13 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.11"
 django = "^4.2.7"
+djangorestframework = "^3.14.0"
+drf-yasg = "^1.21.7"
+mysqlclient = "^2.2.0"
+celery = "^5.3.4"
+redis = "^5.0.1"
+flower = "^2.0.1"
+django-cors-headers = "^4.3.0"
 
 
 [build-system]

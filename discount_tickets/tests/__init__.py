@@ -1,0 +1,1 @@
+from .purchase_tests import TicketPurchaseCreateViewTestCase
